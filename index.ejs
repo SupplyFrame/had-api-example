@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<p><a href="/authorize">oAuth</a></p>
+<p><a href="/projects/skulls">Get Top Skulled Projects</a></p>
+<p><a href="/users/1">Get User's Data</a></p>
+
+    <!-- Renders API Data: -->
+<% if (dataType) { %>
+    <div>
+        <h2><%= dataType %></h2>
+        <% if (dataType === 'oAuth Data') { %>
+            <div>Token: <%= token %></div>
+        <% } %>
+        <div><%= JSON.stringify(apiData) %></div>
+    </div>
+<% } %>
+
+</body>
+</html>
