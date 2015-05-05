@@ -1,4 +1,4 @@
-Example (NodeJS)[https://nodejs.org/] server for [Hackaday API](https://dev.hackaday.io/).
+Example [NodeJS](https://nodejs.org/) server for [Hackaday API](https://dev.hackaday.io/).
 
 Instructions:
 1. Register app from https://dev.hackaday.io/applications
