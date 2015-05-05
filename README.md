@@ -1,6 +1,7 @@
 Example [NodeJS](https://nodejs.org/) server for [Hackaday API](https://dev.hackaday.io/).
 
 Instructions:
+
 1. Register app from https://dev.hackaday.io/applications
 2.	Fill in `clientId`, `clientSecret`, and `userKey` in `/server.js:18`
 3.	`npm i` in console
