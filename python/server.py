@@ -11,17 +11,20 @@ Example Hackaday.io application in Python using Tornado.
 
 import json
 import argparse
+import logging
+
 from tornado.web import Application, RequestHandler, \
         RedirectHandler
+from tornado.httpclient import AsyncHTTPClient
+from tornado.httpserver import HTTPServer
 from tornado.gen import coroutine
 from tornado.ioloop import IOLoop
 
 
 class RootHandler(RequestHandler):
     def get(self):
-        self.render('index.html')
         self.set_status(200)
-        self.finish()
+        self.render('index.html', dataType=None)
 
 
 class CallbackHandler(RequestHandler):
@@ -29,14 +32,23 @@ class CallbackHandler(RequestHandler):
     def get(self):
         # Retrieve the code
         code = self.get_query_argument('code', strip=False)
+        logging.debug('Received code %s', code)
+
         # Determine where to retrieve the access token from
         post_uri = self.application._token_uri \
-                + 'client_id=' + self.application._client_id \
+                + '?client_id=' + self.application._client_id \
                 + '&client_secret=' + self.application._client_secret \
                 + '&code=' + code \
                 + '&grant_type=authorization_code'
-        response = yield self.application._client.fetch(post_uri, method='POST')
-        body = json.loads(response.body)
+
+        logging.debug('Retrieving access token from %s', post_uri)
+        response = yield self.application._client.fetch(
+                post_uri, method='POST', body=b'')
+
+        logging.debug('Parsing %s (headers %s)',
+                response.body, response.headers)
+
+        body = json.loads(response.body.decode('UTF-8'))
         token = body['access_token']
 
         response = yield self.application._client.fetch(
@@ -45,28 +57,53 @@ class CallbackHandler(RequestHandler):
                 headers={
                     'Authorization': 'token %s' % token
                 })
-        body = json.loads(response.body)
-        self.render('data.html',
+
+        body = json.loads(response.body.decode('UTF-8'))
+        self.set_status(200)
+        self.render('index.html',
             dataType='oAuth Data',
             token=token,
-            apiData=body
+            apiData=json.dumps(body)
         )
-        self.set_status(200)
-        self.finish()
 
 
 class UserHandler(RequestHandler):
-    def get(self):
-        self.write('TODO')
-        self.set_status(500)
-        self.finish()
+    @coroutine
+    def get(self, user_id):
+        logging.debug('inside /users/%s', user_id)
+        uri = self.application._api_uri \
+                + '/users/' + user_id \
+                + '?api_key=' + self.application._user_key \
+                + '&sortby=skulls'
+        logging.debug('User Data Query: %s', uri)
+
+        response = yield self.application._client.fetch(uri)
+        body = json.loads(response.body.decode('UTF-8'))
+
+        self.set_status(200)
+        self.render('index.html',
+                dataType='User data',
+                apiData=json.dumps(body)
+        )
 
 
 class ProjectHandler(RequestHandler):
+    @coroutine
     def get(self):
-        self.write('TODO')
-        self.set_status(500)
-        self.finish()
+        logging.debug('inside /projects/skulls')
+        uri = self.application._api_uri \
+                + '/projects?api_key=' + self.application._user_key \
+                + '&sortby=skulls'
+        logging.debug('Project Data Query: %s', uri)
+
+        response = yield self.application._client.fetch(uri)
+        body = json.loads(response.body.decode('UTF-8'))
+
+        self.set_status(200)
+        self.render('index.html',
+                dataType='Top Skulled Projects',
+                apiData=json.dumps(body)
+        )
 
 
 class HADExampleApp(Application):
@@ -91,7 +128,7 @@ class HADExampleApp(Application):
                         + client_id
                         + '&response_type=code'
             }),
-            (r"/users/([0-9]\+)", UserHandler),
+            (r"/users/([0-9]+)", UserHandler),
             (r"/projects/skulls", ProjectHandler),
         ])
 
@@ -121,8 +158,13 @@ def main(*args, **kwargs):
             default='', help='Interface address to listen on.')
     parser.add_argument('--listen-port', dest='listen_port', type=int,
             default=3000, help='Port number (TCP) to listen on.')
+    parser.add_argument('--log-level', dest='log_level',
+            default='INFO', help='Logging level')
 
     args = parser.parse_args(*args, **kwargs)
+
+    # Start logging
+    logging.basicConfig(level=args.log_level)
 
     # Validate arguments
     if (args.client_id is None) or \
@@ -141,9 +183,9 @@ def main(*args, **kwargs):
             auth_uri=args.auth_uri,
             token_uri=args.token_uri
     )
-    http_server = httpserver.HTTPServer(application)
+    http_server = HTTPServer(application)
     http_server.listen(port=args.listen_port, address=args.listen_address)
-    ioloop.IOLoop.current().start()
+    IOLoop.current().start()
 
 if __name__ == '__main__':
     main()
