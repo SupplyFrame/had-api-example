@@ -18,6 +18,13 @@ Ruby:
 2. `ruby server.rb` in console
 3. Go to `http://localhost:4567/`.  After authorizing, you should get back `/v1/projects` JSON response
 
+----------
+
+Python 2.7/3.4 using Tornado:
+
+1. Register app from https://dev.hackaday.io/applications
+2. `python server.py --client-id YOUR_ID --client-secret YOUR_SECRET --user-key YOUR_KEY` in console.
+3. Go to `http://localhost:3000`.
 
 ----------
 
