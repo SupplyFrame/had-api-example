@@ -23,8 +23,9 @@ Ruby:
 Python 2.7/3.4 using Tornado:
 
 1. Register app from https://dev.hackaday.io/applications
-2. `python server.py --client-id YOUR_ID --client-secret YOUR_SECRET --user-key YOUR_KEY` in console.
-3. Go to `http://localhost:3000`.
+2. `python -m pip install tornado`
+3. `python server.py --client-id YOUR_ID --client-secret YOUR_SECRET --user-key YOUR_KEY` in console.
+4. Go to `http://localhost:3000`.
 
 ----------
 
